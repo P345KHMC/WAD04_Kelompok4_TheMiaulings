@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+sqlalchemy
+pyjwt
+python-multipart
+openpyxl
+reportlab
+pytest
+httpx
