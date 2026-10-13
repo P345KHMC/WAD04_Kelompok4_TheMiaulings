@@ -2,12 +2,14 @@ from datetime import datetime, timedelta
 from .models import User, Category, Menu, Transaction, TransactionItem
 from .security import hash_password
 
+
 def waktu(menit_lalu):
     awal_hari = datetime.combine(datetime.now().date(), datetime.min.time())
     return max(awal_hari, datetime.now() - timedelta(minutes=menit_lalu))
 
+
 def isi_data_awal(db):
-    # """Mengisi data contoh HANYA jika database masih kosong."""
+    """Mengisi data contoh HANYA jika database masih kosong."""
     if db.query(User).count() > 0:
         return
     db.add_all([

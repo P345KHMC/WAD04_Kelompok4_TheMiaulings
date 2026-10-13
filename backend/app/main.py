@@ -12,10 +12,7 @@ with SessionLocal() as db:
     isi_data_awal(db)
 
 app = FastAPI(title="Warkop Kita API", version="1.0.0")
-# Daftar origin frontend yang boleh memanggil API (pisahkan dengan koma). Contoh produksi:
-# CORS_ORIGINS=https://p345khmc.github.io
-origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",") if o.strip()]
-app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173"], allow_methods=["*"], allow_headers=["*"])
 
 for router in (auth.router, categories.router, menus.router, transactions.router, reports.router):
     app.include_router(router)
