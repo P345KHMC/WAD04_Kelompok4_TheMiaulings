@@ -1,6 +1,8 @@
 // Satu fungsi request() dipakai semua service: menambah token JWT, mengubah body ke JSON,
 // dan mengubah error dari backend (field "detail") menjadi Error biasa yang mudah ditampilkan.
-const BASE = "/api/v1";
+// Lokal: kosong (dipakai proxy Vite). Produksi: isi VITE_API_URL, mis. https://warkop-api.onrender.com
+export const API_ORIGIN = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+const BASE = API_ORIGIN + "/api/v1";
 
 export const getToken = () => localStorage.getItem("token");
 export const setToken = (token) =>
@@ -34,7 +36,7 @@ async function request(path, { method = "GET", body, form, params, blob } = {}) 
     } catch { /* respons bukan JSON */ }
     if (res.status === 401 && token) {  // token kedaluwarsa -> paksa login ulang
       setToken(null);
-      window.location.href = "/login";
+      window.location.href = import.meta.env.BASE_URL + "login";
     }
     const error = new Error(pesan);
     error.status = res.status;

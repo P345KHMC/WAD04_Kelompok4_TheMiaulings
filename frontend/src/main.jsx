@@ -8,7 +8,7 @@ import "./index.css";
 // BrowserRouter membuat URL (/menu, /orders/3, ...) bisa dipakai untuk pindah halaman.
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "") || "/"}>
       <ToastProvider>
         <App />
       </ToastProvider>

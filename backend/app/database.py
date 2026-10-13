@@ -17,7 +17,6 @@ if is_sqlite:
 SessionLocal = sessionmaker(bind=engine, autoflush=False)
 Base = declarative_base()
 
-
 def get_db():
     db = SessionLocal()
     try:
