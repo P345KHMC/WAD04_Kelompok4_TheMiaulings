@@ -76,4 +76,13 @@ frontend/
 pip install psycopg2-binary
 set DATABASE_URL=postgresql+psycopg2://user:password@localhost/warkop     # Windows (Mac/Linux: export)
 ```
-Tabel dibuat otomatis. Ganti juga `SECRET_KEY` untuk penggunaan sungguhan.
+
+## Tentang SECRET_KEY
+SECRET_KEY sengaja tidak ada untuk praktek keamanan. Buat SECRET_KEY kalian masing-masing dengan cara berikut:
+1. Buat file .env di folder backend
+2. Ada file bernama .env.example. Copy isi tersebut dan Paste di .env
+3. Untuk membuat token rahasia, jalankan perintah berikut di terminal:
+    ```bash
+    python -c "import secrets; print(secrets.token_hex(32))"
+    ```
+4. Copy token tersebut dan Paste di SECRET_KEY di .env

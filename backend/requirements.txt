@@ -7,3 +7,4 @@ openpyxl
 reportlab
 pytest
 httpx
+python-dotenv

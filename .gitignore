@@ -5,3 +5,4 @@ __pycache__/
 *.db
 backend/uploads/*
 !backend/uploads/.gitkeep
+.env

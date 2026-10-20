@@ -6,11 +6,13 @@ from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
 from .database import get_db
 from .models import User
+from dotenv import load_dotenv
 
-SECRET_KEY = os.getenv("SECRET_KEY", "ganti-secret-ini-di-produksi")
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY")
 bearer = HTTPBearer(auto_error=False)
 token_dicabut = set()  # jti token yang sudah logout (di memori; hilang jika server restart)
-
 
 def hash_password(password: str) -> str:
     salt = os.urandom(16)
