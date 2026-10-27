@@ -3,9 +3,13 @@ import { Link } from "react-router-dom";
 import PageHeader from "../components/PageHeader.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
 import EmptyState from "../components/EmptyState.jsx";
+import Pagination from "../components/Pagination.jsx";
 import { getTransactions } from "../services/transactionService.js";
 import { formatRupiah } from "../utils/formatRupiah.js";
 import { formatJam, formatTanggal } from "../utils/formatTanggal.js";
+import { usePaginasi } from "../utils/usePaginasi.js";
+
+const PESANAN_PER_HALAMAN = 5; // ubah angka ini untuk mengatur jumlah pesanan per halaman
 
 const daftarStatus = ["pending", "diproses", "selesai", "dibatalkan"];
 
@@ -24,42 +28,87 @@ function Orders() {
       .catch((e) => setError(e.message));
   }, [status, mulai, sampai]);
 
+  const paginasi = usePaginasi(
+    transaksi ?? [],
+    PESANAN_PER_HALAMAN,
+    `${status}|${mulai}|${sampai}`,
+  );
+
   return (
     <section>
       <PageHeader judul="Pesanan" subjudul="Semua transaksi Warkop Kita.">
-        <Link to="/orders/new" className="btn btn-primary">+ Pesanan baru</Link>
+        <Link to="/orders/new" className="btn btn-primary">
+          + Pesanan baru
+        </Link>
       </PageHeader>
 
       <div className="toolbar filter-baris">
         <div className="chips">
-          <button className={status === "" ? "chip aktif" : "chip"} onClick={() => setStatus("")}>Semua</button>
+          <button
+            className={status === "" ? "chip aktif" : "chip"}
+            onClick={() => setStatus("")}
+          >
+            Semua
+          </button>
           {daftarStatus.map((s) => (
-            <button key={s} className={status === s ? "chip aktif" : "chip"} onClick={() => setStatus(s)}>{s}</button>
+            <button
+              key={s}
+              className={status === s ? "chip aktif" : "chip"}
+              onClick={() => setStatus(s)}
+            >
+              {s}
+            </button>
           ))}
         </div>
         <div className="filter-tanggal">
-          <label>Dari <input type="date" value={mulai} onChange={(e) => setMulai(e.target.value)} /></label>
-          <label>Sampai <input type="date" value={sampai} onChange={(e) => setSampai(e.target.value)} /></label>
+          <label>
+            Dari{" "}
+            <input
+              type="date"
+              value={mulai}
+              onChange={(e) => setMulai(e.target.value)}
+            />
+          </label>
+          <label>
+            Sampai{" "}
+            <input
+              type="date"
+              value={sampai}
+              onChange={(e) => setSampai(e.target.value)}
+            />
+          </label>
         </div>
       </div>
 
       {error && <EmptyState>{error}</EmptyState>}
       {!error && !transaksi && <p className="muted">Memuat pesanan...</p>}
-      {transaksi && transaksi.length === 0 && <EmptyState>Tidak ada pesanan untuk filter ini.</EmptyState>}
+      {transaksi && transaksi.length === 0 && (
+        <EmptyState>Tidak ada pesanan untuk filter ini.</EmptyState>
+      )}
       {transaksi && transaksi.length > 0 && (
-        <div className="tabel">
-          {transaksi.map((t) => (
-            <Link to={`/orders/${t.id}`} className="tabel-baris tabel-link" key={t.id}>
-              <div className="tabel-utama">
-                <strong>{t.nama_pelanggan}</strong>
-                <span className="muted">{t.kode_transaksi} · {formatTanggal(t.created_at)} {formatJam(t.created_at)}</span>
-              </div>
-              <span className="muted">{t.items.length} item</span>
-              <strong>{formatRupiah(t.total_harga)}</strong>
-              <StatusBadge status={t.status} />
-            </Link>
-          ))}
-        </div>
+        <>
+          <div className="tabel">
+            {paginasi.data.map((t) => (
+              <Link
+                to={`/orders/${t.id}`}
+                className="tabel-baris tabel-link"
+                key={t.id}
+              >
+                <div className="tabel-utama">
+                  <strong>{t.nama_pelanggan}</strong>
+                  <span className="muted">
+                    {t.kode_transaksi} · {formatTanggal(t.created_at)}{" "}
+                    {formatJam(t.created_at)}
+                  </span>
+                </div>
+                <span className="muted">{t.items.length} item</span>
+                <strong>{formatRupiah(t.total_harga)}</strong>
+                <StatusBadge status={t.status} />
+              </Link>
+            ))}
+          </div>
+          <Pagination {...paginasi} />
+        </>
       )}
     </section>
   );
