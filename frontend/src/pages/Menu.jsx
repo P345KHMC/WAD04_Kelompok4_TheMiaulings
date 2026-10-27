@@ -4,8 +4,16 @@ import PageHeader from "../components/PageHeader.jsx";
 import MenuCard from "../components/MenuCard.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import ModalKonfirmasi from "../components/ModalKonfirmasi.jsx";
+import Pagination from "../components/Pagination.jsx";
 import { useToast } from "../components/Toast.jsx";
-import { getMenus, updateAvailability, deleteMenu } from "../services/menuService.js";
+import {
+  getMenus,
+  updateAvailability,
+  deleteMenu,
+} from "../services/menuService.js";
+import { usePaginasi } from "../utils/usePaginasi.js";
+
+const MENU_PER_HALAMAN = 8; // ubah angka ini untuk mengatur jumlah menu per halaman
 
 // Katalog visual: foto, nama, kategori, harga, status. Admin bisa edit/hapus.
 function Menu({ user }) {
@@ -18,14 +26,18 @@ function Menu({ user }) {
   const [menuHapus, setMenuHapus] = useState(null);
 
   function muat() {
-    getMenus().then(setMenus).catch((e) => setError(e.message));
+    getMenus()
+      .then(setMenus)
+      .catch((e) => setError(e.message));
   }
   useEffect(muat, []);
 
   async function ubahKetersediaan(menu) {
     try {
       await updateAvailability(menu.id, !menu.is_available);
-      toast(`${menu.nama} ditandai ${menu.is_available ? "habis" : "tersedia"}.`);
+      toast(
+        `${menu.nama} ditandai ${menu.is_available ? "habis" : "tersedia"}.`,
+      );
       muat();
     } catch (e) {
       toast(e.message, "error");
@@ -43,27 +55,59 @@ function Menu({ user }) {
     setMenuHapus(null);
   }
 
+  // Hook harus dipanggil SEBELUM return awal di bawah, jadi filter dihitung di sini.
+  const semuaMenu = menus ?? [];
+  const kategori = [
+    ...new Map(semuaMenu.map((m) => [m.category.id, m.category])).values(),
+  ];
+  const tampil = semuaMenu
+    .filter((m) => kategoriId === 0 || m.category_id === kategoriId)
+    .filter((m) => m.nama.toLowerCase().includes(cari.trim().toLowerCase()));
+  const paginasi = usePaginasi(
+    tampil,
+    MENU_PER_HALAMAN,
+    `${cari}|${kategoriId}`,
+  );
+
   if (error) return <EmptyState>{error}</EmptyState>;
   if (!menus) return <p className="muted">Memuat menu...</p>;
 
-  const kategori = [...new Map(menus.map((m) => [m.category.id, m.category])).values()];
-  const tampil = menus
-    .filter((m) => kategoriId === 0 || m.category_id === kategoriId)
-    .filter((m) => m.nama.toLowerCase().includes(cari.trim().toLowerCase()));
-
   return (
     <section>
-      <PageHeader judul="Menu" subjudul={isAdmin ? "Kelola menu Warkop Kita." : "Daftar menu Warkop Kita."}>
-        {isAdmin && <Link to="/menu/new" className="btn btn-primary">+ Tambah menu</Link>}
+      <PageHeader
+        judul="Menu"
+        subjudul={
+          isAdmin ? "Kelola menu Warkop Kita." : "Daftar menu Warkop Kita."
+        }
+      >
+        {isAdmin && (
+          <Link to="/menu/new" className="btn btn-primary">
+            + Tambah menu
+          </Link>
+        )}
       </PageHeader>
 
       <div className="toolbar">
-        <input className="input-cari" placeholder="Cari menu..." value={cari}
-          onChange={(e) => setCari(e.target.value)} aria-label="Cari menu" />
+        <input
+          className="input-cari"
+          placeholder="Cari menu..."
+          value={cari}
+          onChange={(e) => setCari(e.target.value)}
+          aria-label="Cari menu"
+        />
         <div className="chips">
-          <button className={kategoriId === 0 ? "chip aktif" : "chip"} onClick={() => setKategoriId(0)}>Semua</button>
+          <button
+            className={kategoriId === 0 ? "chip aktif" : "chip"}
+            onClick={() => setKategoriId(0)}
+          >
+            Semua
+          </button>
           {kategori.map((k) => (
-            <button key={k.id} className={kategoriId === k.id ? "chip aktif" : "chip"} onClick={() => setKategoriId(k.id)}>
+            <button
+              key={k.id}
+              className={kategoriId === k.id ? "chip aktif" : "chip"}
+              onClick={() => setKategoriId(k.id)}
+            >
               {k.nama}
             </button>
           ))}
@@ -71,18 +115,37 @@ function Menu({ user }) {
       </div>
 
       {tampil.length === 0 ? (
-        <EmptyState>{cari ? `Tidak ada menu bernama "${cari}".` : "Belum ada menu di kategori ini."}</EmptyState>
+        <EmptyState>
+          {cari
+            ? `Tidak ada menu bernama "${cari}".`
+            : "Belum ada menu di kategori ini."}
+        </EmptyState>
       ) : (
-        <div className="menu-grid">
-          {tampil.map((m) => (
-            <MenuCard key={m.id} menu={m} isAdmin={isAdmin} onToggle={ubahKetersediaan} onHapus={setMenuHapus} />
-          ))}
-        </div>
+        <>
+          <div className="menu-grid">
+            {paginasi.data.map((m) => (
+              <MenuCard
+                key={m.id}
+                menu={m}
+                isAdmin={isAdmin}
+                onToggle={ubahKetersediaan}
+                onHapus={setMenuHapus}
+              />
+            ))}
+          </div>
+          <Pagination {...paginasi} />
+        </>
       )}
 
       {menuHapus && (
-        <ModalKonfirmasi judul="Hapus menu ini?" labelYa="Ya, hapus" onYakin={konfirmasiHapus} onBatal={() => setMenuHapus(null)}>
-          {menuHapus.nama} akan dihapus dari katalog dan tidak bisa dikembalikan.
+        <ModalKonfirmasi
+          judul="Hapus menu ini?"
+          labelYa="Ya, hapus"
+          onYakin={konfirmasiHapus}
+          onBatal={() => setMenuHapus(null)}
+        >
+          {menuHapus.nama} akan dihapus dari katalog dan tidak bisa
+          dikembalikan.
         </ModalKonfirmasi>
       )}
     </section>
